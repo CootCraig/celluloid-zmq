@@ -10,9 +10,6 @@ require 'celluloid/zmq/waker'
 module Celluloid
   # Actors which run alongside 0MQ sockets
   module ZMQ
-    class NotZmqActorError < StandardError; end
-    class NotZmqSocketError < StandardError; end
-
     class << self
       attr_writer :context
 
@@ -34,30 +31,9 @@ module Celluloid
       end
     end
 
-    def wait_readable(socket)
-      if !socket.is_a?(::ZMQ::Socket)
-        throw NotZmqSocketError
-      end
-      actor = Thread.current[:celluloid_actor]
-      if actor && actor.mailbox.is_a?(Celluloid::ZMQ::Mailbox)
-        actor.mailbox.reactor.wait_readable(socket)
-      else
-        throw NotZmqActorError
-      end
-      nil
-    end
-    module_function :wait_readable
+    extend Forwardable
 
-    def wait_writable(socket)
-      actor = Thread.current[:celluloid_actor]
-      if actor && actor.mailbox.is_a?(Celluloid::ZMQ::Mailbox)
-        actor.mailbox.reactor.wait_writable(socket)
-      else
-        Kernel.select([], [io])
-      end
-      nil
-    end
-    module_function :wait_writable
-
+    # Wait for the given IO object to become readable/writeable
+    def_delegators 'current_actor.mailbox.reactor', :wait_readable, :wait_writeable
   end
 end

@@ -68,7 +68,7 @@ module Celluloid
 
       # Read a message from the socket
       def read(buffer = '')
-        Celluloid::ZMQ.wait_readable(@socket)
+        Celluloid.current_actor.wait_readable(@socket) if evented?
 
         unless ::ZMQ::Util.resultcode_ok? @socket.recv_string buffer
           raise IOError, "error receiving ZMQ string: #{::ZMQ::Util.error_string}"
