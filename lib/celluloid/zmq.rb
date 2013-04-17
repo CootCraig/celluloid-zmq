@@ -31,9 +31,22 @@ module Celluloid
       end
     end
 
-    extend Forwardable
+    # Is this a Celluloid::ZMQ evented actor?
+    def evented?
+      actor = Thread.current[:celluloid_actor]
+      return unless actor
 
-    # Wait for the given IO object to become readable/writable
-    def_delegators 'current_actor.mailbox.reactor', :wait_readable, :wait_writable
+      mailbox = actor.mailbox
+      mailbox.is_a?(Celluloid::IO::Mailbox) && mailbox.reactor.is_a?(Celluloid::ZMQ::Reactor)
+    end
+
+    def wait_readable(socket)
+      throw TypeError unless ZMQ.evented?
+      throw ArgumentError unless socket.is_a?(::ZMQ::Socket)
+      actor = Thread.current[:celluloid_actor]
+      actor.mailbox.reactor.wait_readable(socket)
+      nil
+    end
+
   end
 end
