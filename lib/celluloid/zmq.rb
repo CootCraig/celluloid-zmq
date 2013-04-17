@@ -39,6 +39,7 @@ module Celluloid
       mailbox = actor.mailbox
       mailbox.is_a?(Celluloid::IO::Mailbox) && mailbox.reactor.is_a?(Celluloid::ZMQ::Reactor)
     end
+    module_function :evented?
 
     def wait_readable(socket)
       throw TypeError unless ZMQ.evented?
@@ -47,6 +48,7 @@ module Celluloid
       actor.mailbox.reactor.wait_readable(socket)
       nil
     end
+    module_function :wait_readable
 
   end
 end
